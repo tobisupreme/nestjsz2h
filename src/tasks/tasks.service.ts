@@ -28,4 +28,8 @@ export class TasksService {
     const task = this.tasks.find((task) => task.id === taskId);
     return task;
   }
+
+  deleteTaskById(taskId: string): void {
+    this.tasks = this.tasks.filter((task) => task.id !== taskId);
+  }
 }
