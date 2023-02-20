@@ -8,10 +8,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Task, TaskStatus } from '@prisma/client';
 import { QueryTaskDto } from './dto/query-tasks.dto';
 import { TasksService } from './tasks.service';
 
+@ApiTags('Tasks')
 @Controller('tasks')
 export class TasksController {
   constructor(private tasksService: TasksService) {}
