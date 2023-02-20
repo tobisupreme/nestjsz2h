@@ -13,4 +13,9 @@ export class AuthController {
     await this.authService.createUser(dto);
     return;
   }
+
+  @Post('/login')
+  async logIn(@Body() dto: AuthCredentialsDto) {
+    return this.authService.logIn(dto);
+  }
 }
