@@ -10,8 +10,7 @@ export class AuthController {
 
   @Post('/signup')
   async createUser(@Body() dto: AuthCredentialsDto): Promise<void> {
-    const { username, password } = dto;
-    await this.authService.createUser({ username, password });
+    await this.authService.createUser(dto);
     return;
   }
 }
