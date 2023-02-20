@@ -6,9 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { CreateTaskDto } from './dto/tasks.dto';
-import { Task, TaskStatus } from './tasks.model';
+import { Task, TaskStatus } from '@prisma/client';
+import { QueryTaskDto } from './dto/query-tasks.dto';
 import { TasksService } from './tasks.service';
 
 @Controller('tasks')
@@ -16,30 +17,30 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  getAllTasks(): Task[] {
-    return this.tasksService.getAllTasks();
+  async getAllTasks(@Query() queryObj: QueryTaskDto): Promise<Task[]> {
+    return await this.tasksService.getAllTasks(queryObj);
   }
 
   @Post()
-  createTask(@Body() createTaskDto: CreateTaskDto): Task {
-    return this.tasksService.createTask(createTaskDto);
+  async createTask(@Body() createTaskDto: Task): Promise<Task> {
+    return await this.tasksService.createTask(createTaskDto);
   }
 
   @Get(':id')
-  getTaskById(@Param('id') taskId: string): Task {
-    return this.tasksService.getTaskById(taskId);
+  async getTaskById(@Param('id') taskId: string): Promise<Task> {
+    return await this.tasksService.getTaskById(taskId);
   }
 
   @Patch(':id/status')
-  updateTaskById(
+  async updateTaskById(
     @Param('id') taskId: string,
     @Body('status') status: TaskStatus,
-  ): Task {
-    return this.tasksService.updateTaskById(taskId, status);
+  ) {
+    return await this.tasksService.updateTaskById(taskId, status);
   }
 
   @Delete(':id')
-  deleteTaskById(@Param('id') taskId: string): void {
-    return this.tasksService.deleteTaskById(taskId);
+  async deleteTaskById(@Param('id') taskId: string) {
+    return await this.tasksService.deleteTaskById(taskId);
   }
 }
