@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Task, TaskStatus } from '@prisma/client';
+import { Prisma, Task, TaskStatus, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { QueryTaskDto } from './dto/query-tasks.dto';
 
@@ -7,33 +7,70 @@ import { QueryTaskDto } from './dto/query-tasks.dto';
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  getAllTasks(queryObj: QueryTaskDto): Promise<Task[]> {
-    console.log(Object.keys(queryObj).length);
-    if (Object.keys(queryObj).length < 1) {
-      return this.prisma.task.findMany();
-    }
+  async getAllTasks(queryObj: QueryTaskDto, user: User): Promise<Task[]> {
+    let filter: Prisma.TaskFindManyArgs;
 
-    return this.prisma.task.findMany({
-      where: {
-        status: queryObj.status,
-        OR: [
-          {
-            title: { contains: queryObj.search },
+    if (Object.keys(queryObj).length < 1) {
+      filter = { where: { User: user } };
+    } else {
+      filter = {
+        where: {
+          AND: [
+            { User: user },
+            {
+              AND: [
+                { status: queryObj.status },
+                {
+                  OR: [
+                    {
+                      title: { contains: queryObj.search },
+                    },
+                    {
+                      description: { contains: queryObj.search },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      };
+    }
+    filter = {
+      ...filter,
+      include: {
+        User: {
+          select: {
+            username: true,
           },
-          {
-            description: { contains: queryObj.search },
+        },
+      },
+    };
+
+    return await this.prisma.task.findMany(filter);
+  }
+
+  createTask(user: User, createTaskDto: Task): Promise<Task> {
+    const obj = { ...createTaskDto, userId: user.id };
+    return this.prisma.task.create({
+      data: obj,
+      include: {
+        User: {
+          select: {
+            username: true,
           },
-        ],
+        },
       },
     });
   }
 
-  createTask(createTaskDto: Task): Promise<Task> {
-    return this.prisma.task.create({ data: createTaskDto });
-  }
-
-  async getTaskById(taskId: string): Promise<Task> {
-    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+  async getTaskById(taskId: string, user: User): Promise<Task> {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+        User: user,
+      },
+    });
 
     if (!task) {
       throw new NotFoundException('Task with provided ID not found!');
@@ -42,11 +79,20 @@ export class TasksService {
     return task;
   }
 
-  deleteTaskById(taskId: string) {
+  async deleteTaskById(taskId: string, user: User) {
+    await this.getTaskById(taskId, user);
     return this.prisma.task.delete({ where: { id: taskId } });
   }
 
-  updateTaskById(taskId: string, status: TaskStatus): Promise<Task> {
-    return this.prisma.task.update({ where: { id: taskId }, data: { status } });
+  async updateTaskById(
+    taskId: string,
+    status: TaskStatus,
+    user: User,
+  ): Promise<Task> {
+    await this.getTaskById(taskId, user);
+    return this.prisma.task.update({
+      where: { id: taskId },
+      data: { status },
+    });
   }
 }
