@@ -7,7 +7,9 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { Task, TaskStatus } from '@prisma/client';
 import { QueryTaskDto } from './dto/query-tasks.dto';
@@ -15,6 +17,7 @@ import { TasksService } from './tasks.service';
 
 @ApiTags('Tasks')
 @Controller('tasks')
+@UseGuards(AuthGuard())
 export class TasksController {
   constructor(private tasksService: TasksService) {}
 

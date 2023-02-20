@@ -8,6 +8,7 @@ export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
   getAllTasks(queryObj: QueryTaskDto): Promise<Task[]> {
+    console.log(Object.keys(queryObj).length);
     if (Object.keys(queryObj).length < 1) {
       return this.prisma.task.findMany();
     }
